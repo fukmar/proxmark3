@@ -399,6 +399,9 @@ typedef struct {
 #define CMD_HF_ISO15693_FINDAFI                                           0x0315
 #define CMD_LF_SNIFF_RAW_ADC                                              0x0317
 
+// For OTPTEST
+#define CMD_MIFAREU_OTPTEST                                               0x0777
+
 // For Hitag2 transponders
 #define CMD_LF_HITAG_SNIFF                                                0x0370
 #define CMD_LF_HITAG_SIMULATE                                             0x0371

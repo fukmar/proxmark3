@@ -1114,7 +1114,11 @@ static void PacketReceived(PacketCommandNG *packet) {
             MifareUWriteBlock(packet->oldarg[0], packet->oldarg[1], packet->data.asBytes);
             break;
         }
-        case CMD_HF_MIFARE_ACQ_ENCRYPTED_NONCES: {
+	case CMD_MIFAREU_OTPTEST: {
+            MifareUOtpTest();
+            break;
+	}
+	case CMD_HF_MIFARE_ACQ_ENCRYPTED_NONCES: {
             MifareAcquireEncryptedNonces(packet->oldarg[0], packet->oldarg[1], packet->oldarg[2], packet->data.asBytes);
             break;
         }

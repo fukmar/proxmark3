@@ -142,4 +142,6 @@ void DetectNACKbug(void);
 
 bool GetIso14443aAnswerFromTag_Thinfilm(uint8_t *receivedResponse, uint8_t *received_len);
 
+void CodeIso14443aBitsAsReaderPar(const uint8_t *cmd, uint16_t bits, const uint8_t *parity);
+
 #endif /* __ISO14443A_H */

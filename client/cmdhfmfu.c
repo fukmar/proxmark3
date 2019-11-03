@@ -2757,6 +2757,7 @@ static command_t CommandTable[] = {
     {"sim",     CmdHF14AMfUSim,            IfPm3Iso14443a,  "Simulate Ultralight from emulator memory"},
     {"gen",     CmdHF14AMfUGenDiverseKeys, AlwaysAvailable, "Generate 3des mifare diversified keys"},
     {"pwdgen",  CmdHF14AMfUPwdGen,         AlwaysAvailable, "Generate pwd from known algos"},
+    {"otptest",    CmdHF14AMfuOtpTest, AlwaysAvailable, "Fault Injection Test on OTP bits"},
     {NULL, NULL, NULL, NULL}
 };
 
@@ -2771,3 +2772,35 @@ int CmdHFMFUltra(const char *Cmd) {
     return CmdsParse(CommandTable, Cmd);
 }
 
+int CmdHF14AMfuOtpTest(const char *Cmd){
+    uint8_t cmdp = 0;
+    bool errors = 0;
+    uint32_t len = strtol(Cmd, NULL, 0);
+    uint8_t data[PM3_CMD_DATA_SIZE] = {0};
+    
+    while (param_getchar(Cmd, cmdp) != 0x00 && !errors) {
+        switch (tolower(param_getchar(Cmd, cmdp))) {
+            case 'h':
+                return usage_hf_mfu_otptest();
+        }
+    }
+    
+   
+    clearCommandBuffer();
+    SendCommandNG(CMD_MIFAREU_OTPTEST, data, len);
+    PacketResponseNG resp;
+    if (WaitForResponseTimeout(777,&resp,10000)) {
+        
+        PrintAndLogEx(NORMAL, "IN");
+        
+    }else {
+            PrintAndLogEx(WARNING, "Failed");
+          }
+    return 0;
+    }
+
+
+int usage_hf_mfu_otptest(void) {
+    PrintAndLogEx(NORMAL, "Fault Injection - More help sooner or later\n");
+    return 0;
+}

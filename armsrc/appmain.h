@@ -41,4 +41,5 @@ void ListenReaderField(uint8_t limit);
 void StandAloneMode(void);
 void printStandAloneModes(void);
 
+void MifareUOtpTest();
 #endif

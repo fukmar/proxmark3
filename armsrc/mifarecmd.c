@@ -14,7 +14,7 @@
 //-----------------------------------------------------------------------------
 
 #include "mifarecmd.h"
-
+#include "appmain.h"
 #include "pmflash.h"
 #include "proxmark3_arm.h"
 #include "string.h"
@@ -2173,3 +2173,87 @@ void Mifare_DES_Auth2(uint32_t arg0, uint8_t *datain) {
     LEDsoff();
     set_tracing(false);
 }
+
+void MifareUOtpTest()
+{
+    static uint32_t NextTransferTime;
+    static uint32_t LastTimeProxToAirStart;
+    
+    #define REQUEST_GUARD_TIME (7000/16 + 1)
+    #define    SEC_Y 0x00
+    uint8_t blockNo =   3;
+    uint8_t blockData[4] = {0xFF,0xFF,0xFF,0xFF};
+     
+    LEDsoff();
+    LED_A_ON();
+    iso14443a_setup(FPGA_HF_ISO14443A_READER_LISTEN);
+    
+    clear_trace();
+    set_tracing(true);
+    
+    if (!iso14443a_select_card(NULL, NULL, NULL, true, 0, true)) {
+        if (DBGLEVEL >= 1) Dbprintf("Can't select card");
+        OnError(0);
+        return;
+    };
+    
+    uint8_t block[5] = {blockNo, 0x00, 0x00, 0x00, 0x00 };
+ 
+    // command MIFARE_CLASSIC_WRITEBLOCK
+    memcpy(block+1, blockData, 4);
+    
+    uint8_t dcmd[sizeof(block)+3];
+    dcmd[0] = MIFARE_ULC_WRITE;
+    memcpy(dcmd+1, block, sizeof(block));
+    AddCrc14A(dcmd, sizeof(block)+1);
+    Dbprintf("Transmitting\n");
+    
+    uint8_t par[MAX_PARITY_SIZE] = {0x00};
+    GetParity(dcmd, sizeof(dcmd), par);
+    
+    CodeIso14443aBitsAsReaderPar(dcmd, sizeof(dcmd)*8, par);
+    // Send command to tag
+    
+    FpgaWriteConfWord(FPGA_MAJOR_MODE_HF_ISO14443A | FPGA_HF_ISO14443A_READER_MOD);
+    
+    
+        
+        uint32_t ThisTransferTime = 0;
+        ThisTransferTime = ((MAX(NextTransferTime, GetCountSspClk()) & 0xfffffff8) + 8);
+        
+        while (GetCountSspClk() < ThisTransferTime) {};
+        
+        LastTimeProxToAirStart = ThisTransferTime;
+
+    
+    // clear TXRDY
+    AT91C_BASE_SSC->SSC_THR = SEC_Y;
+    
+    volatile uint8_t b;
+    uint16_t c = 0;
+    while (c < ToSendMax) {
+        if(AT91C_BASE_SSC->SSC_SR & (AT91C_SSC_TXRDY)) {
+            AT91C_BASE_SSC->SSC_THR = ToSend[c++];
+        }
+        //iceman test
+        if (AT91C_BASE_SSC->SSC_SR & (AT91C_SSC_RXRDY)) {
+            b = (uint16_t)(AT91C_BASE_SSC->SSC_RHR); (void)b;
+        }
+    }
+    
+    NextTransferTime = MAX(NextTransferTime, LastTimeProxToAirStart + REQUEST_GUARD_TIME);
+    
+   // Dbprintf("Antenna OFF\n");
+    StartTicks();
+    LED_D_ON();
+    WaitUS(1000);
+    StopTicks();
+    switch_off();
+    LED_D_OFF();
+   
+    reply_old(777,1,0,0,0,0);
+    set_tracing(false);
+        
+    LEDsoff();
+}
+
